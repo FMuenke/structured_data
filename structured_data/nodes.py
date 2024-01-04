@@ -24,6 +24,16 @@ class Node:
     def init_neighbours(self, list_of_nodes, k):
         neighbours, _ = self.get_neighbours(list_of_nodes, k)
         self.neighbours = neighbours
+
+    def load_data(self):
+        if self.sample is not None:
+            return self.sample.load_data()
+        return self.representation
+    
+    def load_y(self):
+        if self.sample is not None:
+            return self.sample.load_y()
+        return self.index
         
 
 class GroupOfNodes:
@@ -84,6 +94,9 @@ class GroupOfNodes:
     
     def get_samples(self):
         return [node.sample for node in self.list_of_nodes]
+    
+    def get_repr(self):
+        return self.get_x()
     
     def mean(self):
         return np.mean(self.get_x(), axis=0)
