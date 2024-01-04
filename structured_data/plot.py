@@ -65,8 +65,6 @@ def plot_hist(list_of_nodes, labels):
         labels = [labels]
     for node in list_of_nodes:
         repr = node.get_repr()
-        if type(repr) is not list:
-            repr = [repr]
         for i, lab in enumerate(labels):
             df["feature"].append(lab)
             df["value"].append(repr[i])

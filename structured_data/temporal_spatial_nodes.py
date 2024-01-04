@@ -49,7 +49,15 @@ class GroupOfTemporalSpatialNodes(GroupOfSpatialNodes):
         y = cl.fit_predict(self.get_time())
         return self.make_sub_grps(y)
     
+    def depth(self, delta_time):
+        return len(self.split_by_time(delta_time))
+    
     def downsample_by_time(self, delta_time, summary_func=np.mean):
         sub_grps = self.split_by_time(delta_time)
         return GroupOfTemporalSpatialNodes([grp.summarize(summary_func) for grp in sub_grps])
-
+    
+    def compute_change(self, delta_time):
+        summarized_grp = self.downsample_by_time(delta_time)
+        repr = summarized_grp.get_repr()
+        max_deviation = np.max(repr, axis=0) - np.min(repr, axis=0)
+        return max_deviation

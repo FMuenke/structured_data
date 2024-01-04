@@ -1,10 +1,7 @@
 import numpy as np
-import matplotlib.pyplot as plt
-import seaborn as sns
-import pandas as pd
-from sklearn.cluster import DBSCAN, AgglomerativeClustering
+from sklearn.cluster import DBSCAN, AgglomerativeClustering, MiniBatchKMeans
 
-from structured_data.utils import group_points_by_grid
+from structured_data.grid import Grid
 from structured_data.nodes import Node, GroupOfNodes
 
 
@@ -49,6 +46,10 @@ class GroupOfSpatialNodes(GroupOfNodes):
     def to_grp_of_nodes(self):
         return GroupOfNodes([node.to_node() for node in self.list_of_nodes])
     
+    def get_samples(self):
+        grp = self.to_grp_of_nodes()
+        return grp.get_samples()
+    
     def get_repr(self):
         repr = [node.get_repr() for node in self.list_of_nodes]
         return np.array(repr)
@@ -65,7 +66,9 @@ class GroupOfSpatialNodes(GroupOfNodes):
         return self.query_by_coords(coords, len(self), radius)
     
     def downsample_by_grid(self, grid_size):
-        list_of_indices, _ = group_points_by_grid(self.get_coords(), grid_size)
+        coords = self.get_coords()
+        grid = Grid(coords, grid_size)
+        list_of_indices = grid.group_points(coords)
         new_nodes = GroupOfSpatialNodes([])
         for list_i in list_of_indices:
             if len(list_i) == 0:
@@ -75,9 +78,9 @@ class GroupOfSpatialNodes(GroupOfNodes):
         return new_nodes
     
     def get_coverage(self, grid_size=4):
-        list_of_indices, _ = group_points_by_grid(self.get_coords(), grid_size)
-        list_of_active_indices = [list_i for list_i in list_of_indices if len(list_i) > 0]
-        return len(list_of_active_indices)
+        coords = self.get_coords()
+        grid = Grid(coords, grid_size)
+        return len(grid.group_points(coords))
     
     def make_sub_grps(self, y):
         assert len(y) == len(self), "Assignement Y does not match number of nodes"
@@ -89,14 +92,19 @@ class GroupOfSpatialNodes(GroupOfNodes):
     def cluster_grid(self, grid_size):
         coordinates = self.get_coords()
         y = np.zeros(coordinates.shape[0], dtype=np.int32)
-        list_of_indices, _ = group_points_by_grid(coordinates, grid_size)
-        list_of_active_indices = [list_i for list_i in list_of_indices if len(list_i) > 0]
+        grid = Grid(coordinates, grid_size)
+        list_of_indices = grid.group_points(coordinates)
         for y_i, list_i in enumerate(list_of_active_indices):
             y[list_i] = y_i
         return self.make_sub_grps(y)
         
     def cluster_dbscan(self, min_dst=16):
         cl = DBSCAN(eps=min_dst)
+        y = cl.fit_predict(self.get_coords())
+        return self.make_sub_grps(y)
+    
+    def cluster_kmeans(self, n_clusters=16):
+        cl = MiniBatchKMeans(n_clusters=n_clusters, n_init="auto")
         y = cl.fit_predict(self.get_coords())
         return self.make_sub_grps(y)
     
