@@ -1,8 +1,6 @@
 import numpy as np
 from datetime import datetime
-import matplotlib.pyplot as plt
-import seaborn as sns
-import pandas as pd
+from structured_data.sequences import Sequence
 from sklearn.cluster import DBSCAN
 from structured_data.spatial_nodes import SpatialNode, GroupOfSpatialNodes
 
@@ -17,6 +15,8 @@ class TemporalSpatialNode(SpatialNode):
     def to_datetime(self):
         return datetime.fromtimestamp(self.time_stamp)
     
+    def overwrite_representation(self, repr):
+        return TemporalSpatialNode(self.index, self.time_stamp, self.representation, repr, self.sample)
 
 
 class GroupOfTemporalSpatialNodes(GroupOfSpatialNodes):
@@ -30,12 +30,16 @@ class GroupOfTemporalSpatialNodes(GroupOfSpatialNodes):
         sum_index = self.list_of_nodes[0].index
         sum_time = np.mean(self.get_time())
         coordinate = np.mean(np.array([node.representation for node in self.list_of_nodes]), axis=0)
-        representation = summary_func(np.array([node.get_repr() for node in self.list_of_nodes]), axis=0)
+        repr = self.get_repr()
+        representation = summary_func(repr, axis=0)
         sum_sample = self.list_of_nodes[0].sample
         return TemporalSpatialNode(sum_index, sum_time, coordinate, representation, sum_sample)
     
     def get_time(self):
         return np.array([node.time_stamp for node in self.list_of_nodes]).reshape(-1, 1)
+    
+    def mean_time(self):
+        return np.mean(self.get_time())
     
     def make_sub_grps(self, y):
         assert len(y) == len(self), "Assignement Y does not match number of nodes"
@@ -61,3 +65,14 @@ class GroupOfTemporalSpatialNodes(GroupOfSpatialNodes):
         repr = summarized_grp.get_repr()
         max_deviation = np.max(repr, axis=0) - np.min(repr, axis=0)
         return max_deviation
+    
+    def to_sequence(self):
+        ts = [node.time_stamp for node in self.list_of_nodes]
+        repr, samples = self.get_repr(), self.get_samples()
+        return Sequence("series", ts, repr, samples)
+    
+    def to_time_series(self, delta_time=None):
+        if delta_time is None:
+            return self.to_sequence()
+        summarized_grp = self.downsample_by_time(delta_time)
+        return summarized_grp.to_sequence()

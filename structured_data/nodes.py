@@ -67,6 +67,9 @@ class GroupOfNodes:
     def prune(self):
         self.list_of_nodes = self.unique()
 
+    def index(self):
+        return self.list_of_nodes[0].index
+
     def unique(self):
         list_of_ids, list_of_nodes = [], []
         for node in self.list_of_nodes:
@@ -100,6 +103,12 @@ class GroupOfNodes:
     
     def mean(self):
         return np.mean(self.get_x(), axis=0)
+    
+    def min(self):
+        return np.min(self.get_x(), axis=0)
+    
+    def max(self):
+        return np.max(self.get_x(), axis=0)
     
     def std(self):
         return np.std(self.get_x(), axis=0)

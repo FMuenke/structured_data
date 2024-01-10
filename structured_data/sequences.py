@@ -55,6 +55,28 @@ class Sequence:
     def invert(self):
         return Sequence(self.name, self.order, self.x, self.samples, inverse=True)
     
+    def std(self):
+        return np.std(self.x, axis=0)
+    
+    def min(self):
+        return np.min(self.x, axis=0)
+    
+    def max(self):
+        return np.max(self.x, axis=0)
+    
+    def range(self):
+        return self.max() - self.min()
+    
+    def differentiate(self):
+        derivative = [self[i] - self[i - 1] for i in range(1, self.n)]
+        return np.array(derivative)
+    
+    def integrate(self):
+        integral = [self[0]]
+        for i in range(1, self.n):
+            integral.append(self[i] + integral[i - 1])
+        return np.array(integral)
+
     def compute_direction(self):
         direction = []
         for i in range(self.n):
@@ -78,13 +100,9 @@ class Sequence:
         return GroupOfNodes([Node(self.order[i], self.x[i, :], self.samples[i]) for i in range(self.n)])
         
     def score_sample(self, i, th_close=1, th_far=[1, 4]):
-        th_close = 1
-        
         x_c = self.x[i, :]
-
         distances = dst(x_c, self.x)
-        dst_close = []
-        dst_far = []
+        dst_close, dst_far = [], []
         
         for j in range(self.n):
             if i == j:

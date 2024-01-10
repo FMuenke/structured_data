@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 import seaborn as sns
+from datetime import datetime
 from umap import UMAP
 from sklearn.decomposition import PCA
 import matplotlib.pyplot as plt
@@ -52,8 +53,11 @@ def plot_spatial_group_of_nodes(list_of_spatial_nodes):
 
     x, y = np.array(x), np.array(y)
     if len(y.shape) > 1:
-        red = PCA(n_components=1)
-        y = red.fit_transform(y)
+        if y.shape[1] > 1:
+            red = PCA(n_components=1)
+            y = red.fit_transform(y)[:, 0]
+        else:
+            y = y[:, 0]
     df = pd.DataFrame({"x1": x[:, 0], "x2": x[:, 1], "y": y})
     sns.scatterplot(data=df, x="x1", y="x2", hue="y")
     plt.show()
@@ -70,4 +74,38 @@ def plot_hist(list_of_nodes, labels):
             df["value"].append(repr[i])
 
     sns.histplot(data=df, x="value", hue="feature")
+    plt.show()
+
+
+def plot_sequence(sequence, labels, is_time_series=False):
+    if is_time_series:
+        tar = "time"
+        x = [datetime.fromtimestamp(int(ts)) for ts in sequence.order]
+    else:
+        tar = "x"
+        x = sequence.order
+    
+    df = {tar: x}
+    for i, lab in enumerate(labels):
+        df[lab] = sequence.x[:, i]
+    df = pd.DataFrame(df)
+    df = df.melt(id_vars=[tar], value_vars=labels)
+    sns.scatterplot(data=df, x=tar, y="value", hue="variable")
+    plt.show()
+
+
+def plot_sequence_regression(sequence, labels):
+    tar = "x"
+    x = sequence.order
+    
+    df = {tar: x}
+    for i, lab in enumerate(labels):
+        df[lab] = sequence.x[:, i]
+    df = pd.DataFrame(df)
+
+    fig, ax = plt.subplots()
+    for lab in labels:
+        sns.regplot(data=df, x=tar, y=lab, fit_reg=True, ci=None, ax=ax, label=lab)
+    ax.set(ylabel='y', xlabel='x')
+    ax.legend()
     plt.show()

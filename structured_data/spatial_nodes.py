@@ -19,22 +19,19 @@ class SpatialNode(Node):
     def to_node(self):
         return self.sample
     
+    def overwrite_representation(self, repr):
+        return SpatialNode(self.index, self.x, repr, self.sample)
+
 
 class GroupOfSpatialNodes(GroupOfNodes):
     def __init__(self, list_of_spatial_nodes):
         super().__init__(list_of_spatial_nodes)
     
-    def min(self):
-        return np.min(self.get_x(), axis=0)
-    
-    def max(self):
-        return np.max(self.get_x(), axis=0)
-
-    def size(self):
-        return self.max() - self.min()
-    
     def get_coords(self):
         return self.get_x()
+    
+    def mean_coords(self):
+        return np.mean(self.get_coords(), axis=0)
     
     def summarize(self, summary_func=np.mean):
         sum_index = self.list_of_nodes[0].index
@@ -51,8 +48,7 @@ class GroupOfSpatialNodes(GroupOfNodes):
         return grp.get_samples()
     
     def get_repr(self):
-        repr = [node.get_repr() for node in self.list_of_nodes]
-        return np.array(repr)
+        return np.array([node.get_repr() for node in self.list_of_nodes])
     
     def query_by_coords(self, coords, n, dst_min=None):
         distances = np.sqrt(np.sum(np.square(self.get_coords() - coords), axis=1))
@@ -94,7 +90,7 @@ class GroupOfSpatialNodes(GroupOfNodes):
         y = np.zeros(coordinates.shape[0], dtype=np.int32)
         grid = Grid(coordinates, grid_size)
         list_of_indices = grid.group_points(coordinates)
-        for y_i, list_i in enumerate(list_of_active_indices):
+        for y_i, list_i in enumerate(list_of_indices):
             y[list_i] = y_i
         return self.make_sub_grps(y)
         
