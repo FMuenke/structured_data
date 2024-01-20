@@ -71,6 +71,9 @@ class Sequence:
         derivative = [self[i] - self[i - 1] for i in range(1, self.n)]
         return np.array(derivative)
     
+    def to_diff_seq(self):
+        return Sequence(name=self.name+"-diff", values_to_sort=self.order[1:], )
+    
     def integrate(self):
         integral = [self[0]]
         for i in range(1, self.n):
@@ -83,7 +86,7 @@ class Sequence:
             xx = [self.x[i + ii ,:] for ii in range(-1, 2) if 0 <= i + ii < self.n]
             connections = [xx[i + 1] - xx[i] for i in range(len(xx) - 1)]
             direction.append(np.mean(np.array(connections), axis=0))
-        return direction
+        return np.array(direction)
     
     def get_x(self):
         return self.x

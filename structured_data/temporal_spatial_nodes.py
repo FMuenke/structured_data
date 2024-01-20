@@ -43,9 +43,10 @@ class GroupOfTemporalSpatialNodes(GroupOfSpatialNodes):
     
     def make_sub_grps(self, y):
         assert len(y) == len(self), "Assignement Y does not match number of nodes"
+        y_mapping = {y_unique: i for i, y_unique in enumerate(np.unique(y))}
         list_of_grps = [GroupOfTemporalSpatialNodes([]) for _ in np.unique(y)]
         for i in range(len(self)):
-            list_of_grps[int(y[i])].add(self.list_of_nodes[i])
+            list_of_grps[y_mapping[y[i]]].add(self.list_of_nodes[i])
         return list_of_grps
     
     def split_by_time(self, delta_time):
