@@ -3,6 +3,7 @@ import numpy as np
 
 class Node:
     def __init__(self, index, representation, sample=None):
+        self.id = index
         self.index = index
         self.sample = sample
         self.representation = representation
@@ -24,6 +25,9 @@ class Node:
     def init_neighbours(self, list_of_nodes, k):
         neighbours, _ = self.get_neighbours(list_of_nodes, k)
         self.neighbours = neighbours
+
+    def get_repr(self):
+        return self.representation
 
     def load_data(self):
         if self.sample is not None:
@@ -118,3 +122,6 @@ class GroupOfNodes:
         sum_representation = self.mean()
         sum_sample = self.list_of_nodes[0].sample
         return Node(sum_index, sum_representation, sample=sum_sample)
+    
+    def aggregate(self, func=np.mean):
+        return func(self.get_x(), axis=0)

@@ -1,5 +1,5 @@
 import numpy as np
-from sklearn.cluster import DBSCAN, AgglomerativeClustering, MiniBatchKMeans
+from sklearn.cluster import DBSCAN, AgglomerativeClustering, MiniBatchKMeans, MeanShift
 
 from structured_data.grid import Grid
 from structured_data.nodes import Node, GroupOfNodes
@@ -7,17 +7,20 @@ from structured_data.nodes import Node, GroupOfNodes
 
 class SpatialNode(Node):
     def __init__(self, index, coordinates, representation, sample=None):
-        repr_node = Node(index, representation, sample)
-        Node.__init__(self, index, coordinates, repr_node)
+        self.coordinates = coordinates
+        super().__init__(index, representation, sample)
 
     def repr_node(self):
         return self.sample
     
+    def get_coords(self):
+        return self.coordinates
+    
     def get_repr(self):
-        return self.sample.representation
+        return self.representation
     
     def to_node(self):
-        return self.sample
+        return Node(self.index, self.representation, self.sample)
     
     def overwrite_representation(self, repr):
         return SpatialNode(self.index, self.x, repr, self.sample)
@@ -28,7 +31,7 @@ class GroupOfSpatialNodes(GroupOfNodes):
         super().__init__(list_of_spatial_nodes)
     
     def get_coords(self):
-        return self.get_x()
+        return np.array([node.get_coords() for node in self.list_of_nodes])
     
     def mean_coords(self):
         return np.mean(self.get_coords(), axis=0)
@@ -97,6 +100,11 @@ class GroupOfSpatialNodes(GroupOfNodes):
         
     def cluster_dbscan(self, min_dst=16):
         cl = DBSCAN(eps=min_dst)
+        y = cl.fit_predict(self.get_coords())
+        return self.make_sub_grps(y)
+    
+    def cluster_mean_shift(self, min_dst=2):
+        cl = MeanShift(bandwidth=min_dst)
         y = cl.fit_predict(self.get_coords())
         return self.make_sub_grps(y)
     

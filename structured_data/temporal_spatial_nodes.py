@@ -77,3 +77,9 @@ class GroupOfTemporalSpatialNodes(GroupOfSpatialNodes):
             return self.to_sequence()
         summarized_grp = self.downsample_by_time(delta_time)
         return summarized_grp.to_sequence()
+    
+    def get_time_span(self):
+        list_of_time_stamps = [node.time_stamp for node in self]
+        dt_max = datetime.fromtimestamp(np.max(list_of_time_stamps))
+        dt_min = datetime.fromtimestamp(np.min(list_of_time_stamps))
+        print("Start: {} End: {}".format(dt_min, dt_max))
